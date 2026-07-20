@@ -29,18 +29,58 @@ To ensure scalability and accuracy beyond manual Excel workflows, a robust data 
 1. **ETL Pipeline (Python):** A custom Python script was authored to ingest the raw CSV extracts, normalize inconsistent date formatting, and "explode" complex PostgreSQL-style CPT arrays. This ensured every individual CPT code occupied a distinct row for 1:1 reconciliation.
 2. **Reconciliation Engine (SQL):** The normalized data was loaded into a relational database. Because lightweight engines (like SQLite) lack native `FULL OUTER JOIN` capabilities, a customized anti-join architecture was engineered. 
 
-### Data Engineering Workflow
+### 🔄 Data Engineering Pipeline
+
 ```mermaid
-graph TD
-    A[Raw EHR CSV] -->|Python pandas| C{Data Normalization}
-    B[Raw DB CSV] -->|Python pandas| C
-    C -->|Array Parsing| D[(SQLite Database)]
-    D -->|Anti-Join Query| E[Master Reconciliation Table]
-    E -->|Automated SQL| F[Retool KPI Dashboard]
-    
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style F fill:#bfb,stroke:#333,stroke-width:2px
+flowchart TD
+    subgraph INPUT [" 📥  Raw Data Sources"]
+        A(["🗄️ Sample DB Data\n(Billing System CSV)"])
+        B(["🏥 Sample EHR Data\n(Clinical Records CSV)"])
+    end
+
+    subgraph ETL [" 🐍  Python ETL Pipeline — load_and_analyze.py"]
+        C["📐 Normalize Dates\n& Column Headers"]
+        D["💥 Explode PostgreSQL Arrays\n(1 CPT Code per Row)"]
+        E[("🗃️ SQLite Database\naugmedix.db")]
+    end
+
+    subgraph SQL [" 🔍  SQL Reconciliation Engine"]
+        F["LEFT JOIN\n(DB → EHR Match)"]
+        G["WHERE NOT EXISTS\n(Anti-Join: EHR-Only)"] 
+        H["UNION ALL\n(Merge Result Sets)"]
+        I{{"✅ Matched\n25,157 lines"}}
+        J{{"🔴 DB-Only\n202 lines"}}
+        K{{"🟡 EHR-Only\n1,357 lines"}}
+    end
+
+    subgraph OUTPUT [" 📊  Dashboard & Reporting"]
+        L["📈 React KPI Dashboard\nVite + Recharts + Tailwind"]
+        M["📋 Exception Report\n(Nightly Cron Job)"]
+    end
+
+    A --> C
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    E --> G
+    F --> H
+    G --> H
+    H --> I
+    H --> J
+    H --> K
+    I --> L
+    J --> L
+    K --> L
+    L --> M
+
+    style INPUT fill:#1e293b,stroke:#3b82f6,color:#fff
+    style ETL fill:#1e293b,stroke:#a855f7,color:#fff
+    style SQL fill:#1e293b,stroke:#f59e0b,color:#fff
+    style OUTPUT fill:#1e293b,stroke:#10b981,color:#fff
+    style I fill:#064e3b,stroke:#10b981,color:#fff
+    style J fill:#450a0a,stroke:#ef4444,color:#fff
+    style K fill:#451a03,stroke:#f59e0b,color:#fff
 ```
 
 ```sql
@@ -117,18 +157,74 @@ Provides a live, prioritized action plan checklist categorized by compliance ris
 ## 6. Strategic Recommendations
 To immediately resolve the gaps identified by the SQL analysis, the following resource allocation matrix is recommended:
 
-### Target Operational Workflow
+### 🔁 Target Operational Workflow (Post-Implementation)
+
 ```mermaid
-graph LR
-    A[Nightly SQL Script] -->|Generates| B(Exception Report)
-    B --> C{Discrepancy Type}
-    C -->|DB-Only| D[Mountain View QA]
-    C -->|EHR-Only| E[India Ops Team]
-    D -->|Provider Addendum| F((Clean Claim))
-    E -->|Manual Charge Entry| F((Clean Claim))
-    
-    style A fill:#f9d0c4,stroke:#333
-    style F fill:#d4edda,stroke:#333
+flowchart LR
+    subgraph AUTOMATION [" ⚙️  Automated Layer (Nightly)"]
+        A(["🕛 Scheduled\nSQL Cron Job"])
+        B["📊 Exception Report\nGenerated Automatically"]
+    end
+
+    subgraph TRIAGE [" 🔀  Discrepancy Triage"]
+        C{{"Discrepancy\nClassification"}}
+    end
+
+    subgraph COMPLIANCE [" 🔴  Compliance Track — DB-Only (202 lines)"]
+        D["🏔️ Mountain View\n3 Onshore Operators"]
+        E["Provider Audit\n& Addendum Review"]
+        F["Clinical Note\nSigned / Voided"]
+    end
+
+    subgraph REVENUE [" 🟡  Revenue Track — EHR-Only (1,357 lines)"]
+        G["🌏 India Offshore\n20 Operators"]
+        H["Charge Entry\ninto Billing System"]
+        I["Claim Queued\nfor Clearinghouse"]
+    end
+
+    subgraph RESULT [" ✅  Clean Claim Output"]
+        J(["💰 Revenue\nRecovered"])
+        K(["🛡️ Compliance\nMitigated"])
+    end
+
+    A --> B
+    B --> C
+    C -->|"DB-Only"| D
+    C -->|"EHR-Only"| G
+    D --> E --> F --> K
+    G --> H --> I --> J
+
+    style AUTOMATION fill:#1e293b,stroke:#6366f1,color:#fff
+    style TRIAGE fill:#1e293b,stroke:#f59e0b,color:#fff
+    style COMPLIANCE fill:#1e293b,stroke:#ef4444,color:#fff
+    style REVENUE fill:#1e293b,stroke:#f59e0b,color:#fff
+    style RESULT fill:#1e293b,stroke:#10b981,color:#fff
+    style J fill:#064e3b,stroke:#10b981,color:#fff
+    style K fill:#064e3b,stroke:#10b981,color:#fff
+```
+
+### 📅 3-Phase Strategic Implementation Timeline
+
+```mermaid
+gantt
+    title Strategic Action Plan — Q4 2024
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %d
+
+    section 🚨 Phase 1 — Immediate Remediation
+    Audit 202 DB-Only Lines (MV Team)     :crit, p1a, 2024-10-01, 7d
+    Bulk-Enter 1357 EHR-Only (India Team) :crit, p1b, 2024-10-01, 7d
+    Correct 15 Duplicate Sessions         :crit, p1c, 2024-10-01, 3d
+
+    section 📊 Phase 2 — Process Engineering
+    Automate Nightly SQL Cron Job         :p2a, 2024-10-08, 14d
+    India Team Daily Exception Scrub      :p2b, 2024-10-15, 15d
+    Provider Coaching — Liam Young        :p2c, 2024-10-08, 7d
+
+    section 🤖 Phase 3 — Long-Term Innovation
+    API Integration Planning              :p3a, 2024-11-01, 20d
+    Augmedix Ambient AI Deployment        :p3b, 2024-11-21, 10d
+    Target 99%+ Match Rate Achieved       :milestone, 2024-12-01, 0d
 ```
 
 ### Phase 1: Immediate Remediation (0-7 Days)
