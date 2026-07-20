@@ -1,79 +1,181 @@
-# Augmedix Video Presentation Script (Complete Case Study)
-**Target Duration:** ~6 - 7 Minutes  
-**Audience:** Internal Stakeholders (Commure/Augmedix Operations Team)  
+# Augmedix Data Operations Analyst Video Script
+
+### Duration: ~5 Minutes
 
 ---
 
-### [0:00 - 1:30] Personal Introduction & Qualifications
-"Hi everyone, my name is Syeed Asif. Thank you for the opportunity to present my background and my solutions for the Data Operations Analyst case study. 
+## 1. Introduction (45–60 seconds)
 
-I have a strong interest in this position because I am passionate about leveraging data to optimize healthcare operations. Augmedix, as a Commure company, is at the forefront of ambient AI and clinical documentation, and I want to help bridge the gap between that cutting-edge clinical tech and backend revenue cycle operations.
+Hello everyone.
 
-In my career, I've gained strong experience working in client-facing roles and collaborating closely with international teams. I understand how to communicate complex technical data to non-technical stakeholders across different time zones.
+My name is **Kha. Mo. Syeed Asif**.
 
-My technical foundation is heavily rooted in SQL. I regularly build robust data pipelines, and I specialize in advanced query structures like Common Table Expressions (CTEs), Window Functions, and complex Anti-Joins—which you'll see in my solution today. 
+Thank you for giving me the opportunity to present my case study for the **Data Operations Analyst** position.
 
-I am also highly proficient in the Microsoft ecosystem, including Office 365 and Power BI. I have deep experience connecting SQL databases directly to Excel and Google Sheets to build automated, live-updating dashboards for executive stakeholders. 
+I am currently a final-year Computer Science and Engineering student at East West University, and my major is Data Science.
 
-For this presentation, I have tackled all four problems in the assessment, ranging from workflow optimization to a full-stack data pipeline. I'll briefly touch on Problems 1, 3, and 4 before deep-diving into the technical data analysis for Problem 2."
----
+I enjoy working with data to solve real business problems. My experience includes SQL, Python, Power BI, Excel, and dashboard development. I have worked on several data analysis and machine learning projects where I analyzed data, built dashboards, and presented insights to help decision making.
 
-### [0:30 - 1:15] Problem 1: Workers Comp Workflow
-"For the Workers Compensation bottleneck, where our offshore team is failing on 90% of claims, we must immediately diagnose if this is a tooling failure or a workflow failure. 
+I am interested in joining Augmedix because I like the company's mission of improving healthcare through technology and AI. I believe data plays an important role in improving healthcare operations, reducing errors, and increasing revenue, and I would love to contribute to that mission.
 
-**Diagnosis & Solution:**
-If it's tooling, the internal PDF generator might be timing out due to large file sizes. We solve this by moving the PDF generation to an asynchronous background queue, rather than failing the UI request.
-If it's workflow, the offshore team might be spending 10 minutes per claim clicking through UI screens. We solve this by implementing batch-selection and bulk-submission workflows.
-Finally, to ensure it stays fixed, I would track the 'Success Rate per Operator' and the 'Time-to-Submission' metrics in a daily dashboard."
+Today, I will briefly explain my approach to solving the four problems in this assessment.
 
 ---
 
-### [1:15 - 2:00] Problems 3 & 4: Claim Backlogs & Revenue Debugging
-"Moving to Problem 3 regarding the 10,000 'Claims Not Found', my priority is to stop sequential phone calls. I would bucket these claims first by **Timely Filing Limits**, then by **Dollar Value**, and finally batch them by **Payer**. Instead of calling, we would cross-reference Clearinghouse EDI 277 rejection reports, as these claims likely never reached the payer due to demographic typos. 
+## 2. Problem 1 – Workers Compensation Claims (1 minute)
 
-For Problem 4, the Revenue Debugging, the answers lie deep within Medicare billing rules:
-- **Part A:** The payout difference between localities is due to Medicare's Geographic Practice Cost Index (GPCI), which adjusts the RVU multiplier based on local living costs.
-- **Part B:** The drop in payment for CPT 97140 when billed alongside other codes is strictly due to the **Multiple Procedure Payment Reduction (MPPR) rule**, which cuts the Practice Expense payout by 50% for secondary procedures on the same day.
-- **Part C:** To optimize the Physical Therapist's claim, we must apply the Medicare 8-Minute Rule. With 107 total timed minutes, they are entitled to 7 billable units, and we must allocate them strategically starting with the highest RVU value code to maximize the payout."
+The first problem is about Workers Compensation claims.
 
----
+Currently, around 500 claims should be processed every day, but only around 50 are completed because the internal tool fails most of the time.
 
-### [2:00 - 3:00] Problem 2: The Technical Architecture (Python & SQL)
-"Now, let's dive into the core data analysis for Problem 2: reconciling the closed encounters.
+My first step would be to identify the root cause before making any changes.
 
-I didn't want to just match these datasets manually in Excel; I built a programmatic, scalable pipeline. 
-I wrote a custom Python ETL script (`load_and_analyze.py`) that reads the raw CSVs and normalizes the data. Most importantly, it parses the complex PostgreSQL-style arrays in the database export, 'exploding' them so each individual CPT code gets its own row.
+I would first check whether the problem comes from the software or from the workflow.
 
-Once cleaned, the Python script loads the data into a local SQLite database. Because standard SQLite doesn't support a `FULL OUTER JOIN`, I engineered a customized SQL reconciliation engine using a `LEFT JOIN` combined with a `UNION ALL` anti-join. 
+If the problem is the software, I would review application logs, identify common errors, check whether PDF generation is failing, and verify if required patient information is missing before the claim is submitted.
 
-To explain the SQL briefly: The first half of the query uses `SELECT * FROM db_cpt LEFT JOIN ehr_records` matching on the unique composite key of Patient, Provider, Date, and CPT code. This flags rows as either 'Matched' or 'DB_Only'. 
-The second half of the query handles the reverse using an anti-join pattern: `SELECT * FROM ehr_records WHERE NOT EXISTS` inside the `db_cpt` table. This perfectly catches the 'EHR_Only' records. 
+If the problem is the workflow, I would observe how operators are using the system. Sometimes users perform unnecessary manual steps or do not follow the same process, which increases processing time.
 
-By unifying these with `UNION ALL`, the SQL engine outputs a pristine reconciliation table. The Python script then automatically runs 8 different analytical SQL queries on this master table.
+If the issue is caused by the offshore team, I would prepare a Standard Operating Procedure, provide training, and introduce batch processing instead of processing one claim at a time.
 
----
+There could also be other reasons, such as vendor downtime, database connection issues, incorrect patient addresses, missing insurance information, or system permissions.
 
-### [3:00 - 4:00] Problem 2: Business Impact & Operational Plan
-"So, what did the SQL analysis reveal? Out of over 26,000 CPT lines analyzed, we have a **94.1% match rate**. 
+After implementing improvements, I would monitor several KPIs, including:
 
-But looking at the gaps:
-First, we found **1,357 CPT lines that were documented in the EHR, but never billed in the DB**. Assuming an average reimbursement of $60 per PT code, this translates to over $80,000 in pure revenue leakage in just one quarter. 
-Second, we found **202 CPT lines that were billed in the DB, but have no clinical documentation in the EHR**. This exposes the practice to immediate payer recoupments and severe audit penalties. 
+* Success Rate
+* Number of Failed Claims
+* Average Processing Time
+* Claims Processed per Operator
+* Daily Completion Rate
 
-**The Operational Plan:**
-To fix this, I would assign our 3 Mountain View operators to immediately audit those 202 undocumented lines to stop the compliance bleeding. Concurrently, our 20 India team operators will work through the backlog of 1,357 missed charges for revenue recovery. 
-Long-term, we must work with engineering to build an API integration where signing a clinical note automatically populates the billing ledger, completely eliminating manual entry."
+Tracking these metrics daily would help identify new issues quickly.
 
 ---
 
-### [4:00 - 5:00] Dashboard Demonstration & Conclusion
-*(Share screen to show the interactive React dashboard at http://localhost:5173 or http://localhost:3000)*
+## 3. Problem 2 – Closed Encounter Analysis (1 minute 30 seconds)
 
-"To give operations leaders full visibility, I took the data outputted by my Python and SQL pipeline and built this live React dashboard. 
+Problem two is the main data analysis task.
 
-On the **Overview tab**, you can track our macro KPIs, including the declining monthly trend line. 
-If we switch to the **Providers tab**, you can instantly identify performance bottlenecks—like Liam Young flagged here in yellow. 
-The **CPT Codes tab** allows us to drill down into specific services, showing exactly where our 202 compliance-risk codes are originating. 
-And finally, the **Gap Analysis tab** provides a centralized checklist of actionable recommendations based on the data.
+We received two different datasets.
 
-Thank you for your time. I'm confident that implementing this data-driven framework will optimize our RCM workflows and recover significant lost revenue."
+The first dataset contains all closed encounters from the client's Electronic Health Record.
+
+The second dataset contains encounters that were successfully imported into Normandy.
+
+The goal is to identify which encounters are missing and understand why they were not imported.
+
+Instead of comparing thousands of records manually, I created an automated analysis process.
+
+First, I loaded both CSV files.
+
+Then I created a unique encounter identifier using:
+
+* Patient Name
+* Date of Service
+* Rendering Provider
+
+After creating the unique identifier, I compared both datasets using SQL.
+
+I identified all encounters that existed in the EHR but were missing from the imported database.
+
+After finding the missing encounters, I analyzed them further to identify patterns.
+
+For example, I checked:
+
+* Which providers had the highest number of missing encounters.
+* Whether missing encounters happened during a specific date range.
+* Whether certain CPT codes appeared more frequently.
+* Whether there were missing values or duplicate records.
+
+Based on these findings, I suggested possible causes such as data validation failures, incorrect provider information, duplicate records, import filtering rules, or system errors.
+
+Finally, I presented all findings in an interactive dashboard so that managers can quickly identify missing encounters and investigate them.
+
+---
+
+## 4. Problem 3 – Claims Not Found (50 seconds)
+
+The third problem focuses on more than ten thousand claims marked as "Claim Not Found."
+
+Since reviewing every claim individually would take too much time, I would first prioritize the claims.
+
+I would group them based on:
+
+* Claim value
+* Claim age
+* Insurance company
+* Submission date
+
+High-value claims and older claims should receive the highest priority because they have the greatest financial impact.
+
+Next, I would investigate why the claims could not be found.
+
+Possible reasons include:
+
+* Wrong insurance company
+* Incorrect member ID
+* Claim never reached the payer
+* Clearinghouse rejection
+* Incorrect patient information
+* Duplicate submissions
+
+Depending on the reason, the next action could include resubmitting the claim, correcting patient information, contacting the insurance company, or escalating the issue.
+
+---
+
+## 5. Problem 4 – Revenue Debugging (1 minute)
+
+The final problem required understanding Medicare payment rules and CPT codes.
+
+For Part A, I researched why Medicare pays different amounts for the same CPT code in different locations.
+
+I found that Medicare calculates payments using Relative Value Units, Geographic Practice Cost Index, and the yearly Conversion Factor.
+
+Because different geographic locations have different operating costs, physician payments are different.
+
+For Part B, I analyzed why CPT code 97140 received different payments in two different claims.
+
+This happens because when multiple therapy procedures are billed together, Medicare and many insurance companies apply the Multiple Procedure Payment Reduction rule.
+
+As a result, secondary procedures receive reduced reimbursement.
+
+For Part C, I applied the Medicare 8-Minute Rule.
+
+Based on the total treatment minutes, I calculated the correct number of billable units and suggested a better unit distribution to maximize reimbursement while following Medicare guidelines.
+
+---
+
+## 6. Dashboard Demonstration (45 seconds)
+
+To present my analysis clearly, I built an interactive dashboard.
+
+The dashboard includes important business KPIs such as:
+
+* Total Encounters
+* Imported Encounters
+* Missing Encounters
+* Import Rate
+* Claims Status
+* Revenue Summary
+
+I also created visualizations showing:
+
+* Missing encounters by provider
+* Monthly trends
+* Revenue analysis
+* Claims distribution
+* Operational performance
+
+The dashboard allows managers to quickly understand the current situation and identify areas that require immediate attention.
+
+---
+
+## 7. Closing (30 seconds)
+
+In this assessment, my objective was not only to analyze the data but also to understand the business process, identify the root causes, measure the business impact, and recommend practical solutions.
+
+I believe combining SQL, data analysis, visualization, and business understanding can significantly improve Revenue Cycle Management and reduce revenue loss.
+
+Thank you very much for your time and consideration.
+
+I appreciate this opportunity, and I look forward to discussing my work further.
