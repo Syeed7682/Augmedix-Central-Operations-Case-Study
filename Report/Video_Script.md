@@ -52,44 +52,45 @@ Tracking these metrics daily would help identify new issues quickly.
 
 ---
 
-## 3. Problem 2 – Closed Encounter Analysis (1 minute 30 seconds)
+## Problem 2 – Technical Analysis (1 minute 30 seconds)
 
-Problem two is the main data analysis task.
+Now I'd like to explain **Problem 2**, which was the main technical part of this assessment.
 
-We received two different datasets.
+Instead of comparing the two CSV files manually in Excel, I built an automated data analysis process using **Python and SQL**.
 
-The first dataset contains all closed encounters from the client's Electronic Health Record.
+First, I wrote a Python script to load both datasets and clean the data. During this step, I normalized the records and converted the exported data into a format that was easier to analyze. For the CPT codes, I separated multiple codes so that each CPT code became its own row. This made the comparison much more accurate.
 
-The second dataset contains encounters that were successfully imported into Normandy.
+After cleaning the data, I loaded both datasets into a local SQLite database.
 
-The goal is to identify which encounters are missing and understand why they were not imported.
+The next challenge was comparing the two datasets. Since SQLite doesn't support a Full Outer Join directly, I created my own reconciliation query by combining a **LEFT JOIN** with an **anti-join using UNION ALL**.
 
-Instead of comparing thousands of records manually, I created an automated analysis process.
+The first query compared all records from the imported database with the EHR records using a unique key made from the **Patient Name, Date of Service, Rendering Provider, and CPT Code**. This allowed me to identify records that matched and records that existed only in the database.
 
-First, I loaded both CSV files.
+Then I ran another query in the opposite direction to find records that existed in the EHR but were missing from the imported database.
 
-Then I created a unique encounter identifier using:
+Finally, I combined both results using **UNION ALL**, which gave me one complete reconciliation table.
 
-* Patient Name
-* Date of Service
-* Rendering Provider
+After creating this table, I ran several SQL queries to analyze missing encounters, provider performance, CPT code distribution, and overall import quality.
 
-After creating the unique identifier, I compared both datasets using SQL.
+---
 
-I identified all encounters that existed in the EHR but were missing from the imported database.
+## Problem 2 – Findings and Business Impact (1 minute)
 
-After finding the missing encounters, I analyzed them further to identify patterns.
+After completing the SQL analysis, I found that more than **26,000 CPT records** were analyzed, and about **94 percent** matched successfully between the two datasets.
 
-For example, I checked:
+However, there were two important findings.
 
-* Which providers had the highest number of missing encounters.
-* Whether missing encounters happened during a specific date range.
-* Whether certain CPT codes appeared more frequently.
-* Whether there were missing values or duplicate records.
+First, there were **1,357 CPT records** that existed in the client's EHR but were missing from the imported database. This means these services may never have been billed, which could result in significant revenue loss.
 
-Based on these findings, I suggested possible causes such as data validation failures, incorrect provider information, duplicate records, import filtering rules, or system errors.
+Second, there were **202 CPT records** that existed in the database but had no matching clinical documentation in the EHR. This creates a compliance risk because claims should always be supported by clinical documentation.
 
-Finally, I presented all findings in an interactive dashboard so that managers can quickly identify missing encounters and investigate them.
+To solve these issues, I would divide the work between the available teams.
+
+The **three Mountain View operators** would review the 202 undocumented records because these are high-risk and require careful investigation.
+
+The **twenty India team operators** would focus on recovering the 1,357 missing encounters by identifying why they failed to import and correcting the issues.
+
+For a long-term solution, I would recommend improving the integration between the Electronic Health Record system and the billing system so that once a clinical note is completed, the billing information is transferred automatically. This would reduce manual work, improve accuracy, and prevent similar problems in the future.
 
 ---
 
