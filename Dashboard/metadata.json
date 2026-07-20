@@ -1,0 +1,6 @@
+{
+  "name": "RCM Analytics Dashboard & SQL Sandbox",
+  "description": "Comprehensive Revenue Cycle Management (RCM) dashboard for claims, denials, and financial analysis with SQL query runner, operational KPIs, alerts, and PDF report exporting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,9 @@
+# Q5 — Monthly Documentation Trend
+
+_Tracks whether documentation accuracy improved or degraded month-over-month_
+
+| month | unique_sessions | total_cpt_lines | matched | db_only | ehr_only | match_rate_pct |
+|---|---|---|---|---|---|---|
+| 2024-07 | 2032 | 8718 | 8351 | 67 | 300 | 95.8 |
+| 2024-08 | 2132 | 9088 | 8513 | 50 | 525 | 93.7 |
+| 2024-09 | 2094 | 8908 | 8293 | 85 | 530 | 93.1 |

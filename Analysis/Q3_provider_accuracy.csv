@@ -1,0 +1,10 @@
+provider,total,matched,db_only,ehr_only,match_rate_pct,db_only_pct,ehr_only_pct,rag_status
+Julian Lee,1750,1687,11,52,96.4,0.6,3.0,GREEN
+Sebastian Martinez,2078,1995,6,77,96.0,0.3,3.7,GREEN
+Noah Lee,5965,5712,35,218,95.8,0.6,3.7,GREEN
+Elijah Johnson,1035,989,0,46,95.6,0.0,4.4,GREEN
+Charlotte Williams,2402,2289,1,112,95.3,0.0,4.7,GREEN
+Aiden King,8322,7797,45,480,93.7,0.5,5.8,GREEN
+Sebastian Miller,2656,2434,17,205,91.6,0.6,7.7,GREEN
+Liam Young,2506,2254,87,165,89.9,3.5,6.6,YELLOW
+,2,0,0,2,0.0,0.0,100.0,RED

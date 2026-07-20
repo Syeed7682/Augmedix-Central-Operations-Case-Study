@@ -1,0 +1,12 @@
+metric,value
+DB Sessions,6482
+DB CPT Lines,24752
+EHR CPT Lines,25956
+Reconciliation Rows,26716
+Unique DB Patients,537
+Unique EHR Patients,542
+Unique DB Providers,8
+DB Date Start,2024-07-01
+DB Date End,2024-09-30
+EHR Date Start,2024-07-01
+EHR Date End,2024-09-30
