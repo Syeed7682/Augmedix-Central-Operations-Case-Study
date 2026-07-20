@@ -1,20 +1,49 @@
-# Thought Process & Solution Walkthrough
-## Augmedix Central Operations Case Study
-**Author:** Kha. Mo. Syeed Asif | **Role Applied:** Data Operations Analyst | **Date:** July 2026
+# Augmedix Central Operations Case Study
+## Project Report: Thought Process & Solution Architecture
 
 ---
 
-## 🧠 My Approach: How I Thought About This Case
-
-When I first received this case study, I resisted the temptation to jump straight into Excel. My instinct as a data-focused operations analyst is to always ask: **"What is the most scalable, repeatable, and defensible way to solve this?"**
-
-Four problems. Limited resources. Real compliance stakes. Here is exactly how I broke it down.
+| Field | Detail |
+|---|---|
+| **Author** | Kha. Mo. Syeed Asif |
+| **Position Applied** | Data Operations Analyst |
+| **Submitted To** | Commure / Augmedix Operations Team |
+| **Date** | July 2026 |
+| **Report Version** | 1.0 — Final |
 
 ---
 
-## Problem 1: Workers Compensation Claims — The 90% Failure Rate
+## Table of Contents
 
-### 🌲 End-to-End Solution Workflow
+1. [Project Objective](#1-project-objective)
+2. [Problem 1 — Workers Compensation Claims](#2-problem-1--workers-compensation-claims)
+3. [Problem 2 — Closed Encounters Reconciliation](#3-problem-2--closed-encounters-reconciliation)
+4. [Problem 3 — Reconciliation: Claims Not Found](#4-problem-3--reconciliation-claims-not-found)
+5. [Problem 4 — Debugging Revenue](#5-problem-4--debugging-revenue)
+6. [Dashboard Design Rationale](#6-dashboard-design-rationale)
+7. [Key Principles Applied](#7-key-principles-applied)
+8. [Final Conclusion & Business Outcomes](#8-final-conclusion--business-outcomes)
+
+---
+
+## 1. Project Objective
+
+This report documents the complete analytical methodology, decision rationale, and solution architecture applied to the Augmedix Central Operations Case Study. The case study presented four distinct Revenue Cycle Management (RCM) challenges requiring a combination of process diagnostics, data engineering, domain-specific billing expertise, and strategic resource planning.
+
+The primary deliverables produced during this engagement are:
+- A programmatic Python/SQL reconciliation pipeline (Problem 2)
+- An interactive React dashboard for operational stakeholders
+- A structured operational action plan with resource allocation
+- Written strategic analyses for Problems 1, 3, and 4
+
+---
+
+## 2. Problem 1 — Workers Compensation Claims
+
+### 2.1 Problem Definition
+An internal PDF submission tool operated by the India offshore team is experiencing a **90% failure rate**. Of the expected 500 daily claims, only 50 are completed successfully.
+
+### 2.2 Solution Architecture
 
 ```mermaid
 flowchart TD
@@ -76,30 +105,45 @@ flowchart TD
     style MONITOR fill:#1e293b,stroke:#10b981,color:#fff
 ```
 
-### My Initial Hypothesis
-A 90% failure rate is not a training problem — it is a system problem. When I see a failure rate that catastrophically high, the first thing I do is rule out the obvious: is this a bug, a bad configuration, or a process breakdown?
+### 2.3 Diagnostic Approach
 
-### My Thought Process
-I applied a structured **5-Why + Gemba Walk** mental model:
-1. *Why is the team only completing 50/500 claims?* → They are getting stuck.
-2. *Where exactly are they getting stuck?* → I need to shadow them (virtual Gemba Walk).
-3. *Is it the tool or the operator?* → I need to A/B test the 10% that succeeds vs. the 90% that fails.
+A 90% failure rate indicates a **systemic issue**, not an individual performance gap. The diagnostic methodology follows a structured **5-Why + Gemba Walk** framework executed in parallel — not sequentially — to compress resolution time from days to hours.
 
-The key insight here: **the 10% success rate is a gift**. It means the system *can* work under some conditions. My job is to isolate what is different about those 50 successful claims (smaller PDF? different insurer? specific operator?) and then make that the default path for all 500.
+| Diagnostic Track | Method | Expected Finding |
+|---|---|---|
+| **Tooling** | Review API error logs and server metrics | Timeout errors, payload size rejections, vendor API outages |
+| **Workflow** | Virtual Gemba Walk — shadow 3 operators live | UI bottlenecks, excessive manual clicks, missing field confusion |
+| **Data** | A/B comparison of 50 successful vs. 450 failed payloads | Isolate the differentiating variable (e.g., insurer, file size, state) |
 
-### My Decision: Parallel Diagnosis
-I would not wait for a single root cause. I would simultaneously:
-- **Review API logs** for error codes and timeout signatures (tooling check).
-- **Shadow 3 operators** to observe their exact click-path (workflow check).
-- **Compare successful vs. failed claim payloads** to find the differentiating variable.
+**Key insight:** The 10% success rate is diagnostically valuable. The system *can* work under specific conditions. The objective is to identify those conditions and make them the default processing path for all 500 claims.
 
-This parallel approach compresses the diagnosis from days to hours.
+### 2.4 Resolution Framework
+
+| Root Cause | Solution | Owner | Timeline |
+|---|---|---|---|
+| PDF generation timeout | Migrate to asynchronous background queue | Engineering (2 hrs/week) | Week 1 |
+| Payload size exceeds vendor limit | Implement automatic PDF compression | Engineering (2 hrs/week) | Week 1 |
+| Missing required fields | Add pre-submission validation with user warnings | Engineering (2 hrs/week) | Week 2 |
+| Inefficient UI workflow | Implement bulk-batch claim selection | Engineering (2 hrs/week) | Week 2 |
+| Operator training gap | Publish rigid SOP with visual step-by-step screenshots | Mountain View QA Team | Week 1 |
+
+### 2.5 Post-Implementation KPI Tracking
+
+| Metric | Target | Measurement Frequency |
+|---|---|---|
+| Daily Success Rate | ≥ 98% (490+/500) | Daily automated dashboard |
+| Average Time-to-Submission per Claim | < 3 minutes | Weekly review |
+| Success Rate by Individual Operator | ≥ 95% per operator | Weekly review |
+| Error Category Distribution | Monitor for new failure modes | Weekly review |
 
 ---
 
-## Problem 2: Closed Encounters Analysis — The Data Reconciliation
+## 3. Problem 2 — Closed Encounters Reconciliation
 
-### 🌲 End-to-End Solution Workflow
+### 3.1 Problem Definition
+Two datasets — Closed Encounters from the client's EHR and Imported Closed Encounters from our billing database — must be reconciled to identify missing encounters and determine root causes for import failures during Q3 2024.
+
+### 3.2 Solution Architecture
 
 ```mermaid
 flowchart TD
@@ -131,14 +175,14 @@ flowchart TD
     S4 --> P3
 
     subgraph P3 ["📊 Phase 3: Analytical Queries (8 SQL Scripts)"]
-        Q1["Q1: Data Profile &\nVolume Check"]
-        Q2["Q2: Reconciliation\nSummary"]
-        Q3["Q3: Provider Accuracy\nRanking"]
-        Q4["Q4: CPT Code\nDiscrepancy"]
-        Q5["Q5: Monthly Match\nRate Trend"]
-        Q6["Q6: Patient\nGap List"]
-        Q7["Q7: Provider\nSwitching"]
-        Q8["Q8: Duplicate\nCPT Detection"]
+        Q1["Q1: Data Profile"]
+        Q2["Q2: Reconciliation Summary"]
+        Q3["Q3: Provider Accuracy"]
+        Q4["Q4: CPT Discrepancy"]
+        Q5["Q5: Monthly Trend"]
+        Q6["Q6: Patient Gaps"]
+        Q7["Q7: Provider Switching"]
+        Q8["Q8: Duplicate Detection"]
     end
 
     P3 --> P4
@@ -151,7 +195,7 @@ flowchart TD
         F5{{"📉 Trend\n95.8% → 93.1% Declining"}}
     end
 
-    P4 --> DASHBOARD(["🖥️ React Dashboard\nKPI Cards + 4 Tab Views"])
+    P4 --> DASHBOARD(["🖥️ React Dashboard\nKPI Cards + 5 Tab Views"])
 
     style START fill:#1e293b,stroke:#3b82f6,color:#fff
     style P1 fill:#1e293b,stroke:#a855f7,color:#fff
@@ -164,57 +208,75 @@ flowchart TD
     style DASHBOARD fill:#064e3b,stroke:#10b981,color:#fff
 ```
 
-### My Initial Hypothesis
-When two datasets representing the same universe of events don't match, the root cause is almost always one of three things:
-1. **A timing mismatch** (one system updated before the other).
-2. **A data entry gap** (a human skipped a step).
-3. **A structural incompatibility** (the data formats don't align cleanly).
+### 3.3 Technology Selection Rationale
 
-### Why I Chose Python + SQL Over Excel
-My first instinct was: *how big is this dataset, and does Excel scale?* With 26,000+ CPT lines and complex PostgreSQL-style arrays in the DB export, Excel would have been error-prone and non-reproducible.
+| Decision | Rationale |
+|---|---|
+| **Python over Excel** | The DB export contained PostgreSQL-style CPT arrays (e.g., `{97110, 97140, 97112}`) that require programmatic parsing. Excel cannot reliably "explode" arrays into individual rows. Additionally, a Python script is reproducible — any analyst can re-run it at quarter-end in one click. |
+| **SQL over manual comparison** | Set-based JOIN logic is deterministic, auditable, and precise. The same query always returns the same answer — unlike manual Excel VLOOKUP comparisons which are error-prone at 26,000+ row scale. |
+| **SQLite over PostgreSQL** | The dataset is small enough to run locally without server infrastructure. This reduces deployment friction for the assessment. |
+| **Anti-Join over FULL OUTER JOIN** | SQLite does not natively support `FULL OUTER JOIN`. The equivalent `LEFT JOIN + UNION ALL + WHERE NOT EXISTS` pattern is mathematically identical and portable across database engines. |
 
-I chose Python for the ETL because:
-- The CPT codes were stored as arrays (e.g., `{97110, 97140, 97112}`) that needed to be "exploded" into individual rows — a transformation Excel simply cannot do reliably.
-- I needed a **reproducible pipeline** that the next analyst could re-run at quarter-end in one click.
+### 3.4 Core SQL Logic
 
-I chose SQL for the reconciliation because:
-- Set-based logic (JOINs) is the most precise and auditable way to compare two datasets.
-- The results are deterministic — the same query always returns the same answer, unlike manual Excel comparisons.
-
-### The SQL Challenge: No FULL OUTER JOIN in SQLite
-The most technically interesting problem: SQLite does not support `FULL OUTER JOIN`. This is the natural tool for this job (show me everything in both tables regardless of whether there's a match on either side).
-
-My workaround was a classic **anti-join + UNION ALL** pattern:
 ```sql
--- LEFT JOIN captures Matched + DB-Only rows
-SELECT ..., CASE WHEN e.cpt_code IS NOT NULL THEN 'Matched' ELSE 'DB_Only' END AS status
+-- Part 1: Identify Matched and DB-Only records
+SELECT d.patient, d.provider, d.visit_date, d.cpt_code,
+    CASE WHEN e.cpt_code IS NOT NULL THEN 'Matched' ELSE 'DB_Only' END AS status
 FROM db_cpt d
-LEFT JOIN ehr_records e ON (composite key match)
+LEFT JOIN ehr_records e
+    ON d.patient = e.patient AND d.visit_date = e.visit_date AND d.cpt_code = e.cpt_code
 
 UNION ALL
 
--- WHERE NOT EXISTS captures EHR-Only rows
-SELECT ..., 'EHR_Only' AS status
+-- Part 2: Identify EHR-Only records via anti-join
+SELECT e.patient, e.provider, e.visit_date, e.cpt_code, 'EHR_Only' AS status
 FROM ehr_records e
-WHERE NOT EXISTS (SELECT 1 FROM db_cpt d WHERE composite key match);
+WHERE NOT EXISTS (
+    SELECT 1 FROM db_cpt d
+    WHERE d.patient = e.patient AND d.visit_date = e.visit_date AND d.cpt_code = e.cpt_code
+);
 ```
 
-This is mathematically equivalent to a FULL OUTER JOIN. I've used this pattern in production data pipelines before, and it is both battle-tested and highly portable across database engines.
+### 3.5 Analysis Results
 
-### What the Results Revealed
-The SQL output told a clear story:
-- **94.16% match rate** — initially sounds great, but the denominator is 26,716 lines.
-- **1,357 EHR-Only lines** = $81,420 in unbilled revenue sitting idle.
-- **202 DB-Only lines** = active compliance liability (billed with no clinical documentation).
-- **Declining trend** (95.8% → 93.1% in 3 months) = the gap is accelerating, not stabilizing.
+| Metric | Value | Business Implication |
+|---|---|---|
+| Total CPT Lines Analyzed | 26,716 | Full Q3 2024 scope |
+| Matched (DB ∩ EHR) | 25,157 (94.16%) | System parity baseline |
+| EHR-Only (Revenue Leakage) | 1,357 lines | ~$81,420 unbilled revenue |
+| DB-Only (Compliance Risk) | 202 lines | Billed without clinical documentation |
+| Duplicate CPT Sessions | 15 sessions | Inflated billing risk |
+| Monthly Match Rate Decline | 95.8% → 93.1% | Systemic process degradation |
+| Lowest-Performing Provider | Liam Young (89.9%) | Below 90% SLA threshold — 87 DB-only lines |
 
-The trend is what concerned me most. A static gap is a manageable backlog. A *widening* gap is a systemic process failure that compounds every month.
+### 3.6 Root Cause Analysis
+
+| Category | Volume | Root Cause |
+|---|---|---|
+| **EHR-Only** | 1,357 | Providers sign clinical notes after the daily batch export, or billing operators miss transcribing the CPT code during manual data entry. |
+| **DB-Only** | 202 | Providers select billing codes in the Practice Management system but fail to finalize and sign the corresponding clinical note in the EHR. |
+| **Declining Trend** | −2.7 pts | The gap is accelerating month-over-month, indicating a worsening systemic process failure, not a one-time backlog. |
+
+### 3.7 Operational Action Plan
+
+| Phase | Timeline | Action | Owner | Resources |
+|---|---|---|---|---|
+| **Phase 1** | Days 0–7 | Audit 202 DB-Only lines; submit clinical addendums | Mountain View Team | 3 onshore operators |
+| **Phase 1** | Days 0–7 | Bulk-enter 1,357 EHR-Only lines into billing | India Offshore Team | 20 operators |
+| **Phase 1** | Days 0–3 | Correct 15 duplicate CPT sessions | Mountain View Team | 1 operator |
+| **Phase 2** | Days 8–30 | Automate nightly SQL cron job → Exception Report | Engineering | 2 hrs/week |
+| **Phase 2** | Days 8–14 | Targeted coaching session with Liam Young | Mountain View Team | 1 operator |
+| **Phase 3** | Days 31–90 | Deploy Augmedix Ambient AI for auto-CPT capture | Engineering + Product | Cross-functional |
 
 ---
 
-## Problem 3: 10,000 Claims Not Found — The Bucketing Strategy
+## 4. Problem 3 — Reconciliation: Claims Not Found
 
-### 🌲 End-to-End Solution Workflow
+### 4.1 Problem Definition
+10,000 submitted claims across 150 insurance payers are returning a "claim not found" status during the reconciliation process. The current resolution method (individual phone calls) is operationally unsustainable.
+
+### 4.2 Solution Architecture
 
 ```mermaid
 flowchart TD
@@ -224,206 +286,240 @@ flowchart TD
 
     subgraph STEP1 ["🪣 Step 1: Bucket & Prioritize"]
         B1["⏰ Tier 1: Timely Filing Limit\nClaims expiring within 30 days"]
-        B2["💰 Tier 2: Highest Dollar Value\nMaximize revenue recovered per hour"]
+        B2["💰 Tier 2: Highest Dollar Value\nMaximize revenue per hour"]
         B3["🏢 Tier 3: Batch by Payer\n(e.g., all 200 Aetna claims together)"]
         B1 --> B2 --> B3
     end
 
     B3 --> STEP2
 
-    subgraph STEP2 ["🔍 Step 2: Automated Diagnosis (Before Any Phone Calls)"]
+    subgraph STEP2 ["🔍 Step 2: Automated Diagnosis"]
         D1["Pull EDI 277\nClearinghouse Rejection Reports"]
         D2["Run Bulk EDI 270/271\nEligibility Verification"]
-        D3["Cross-reference\nInternal Claim Status Logs"]
-        D1 --> RESULT1
-        D2 --> RESULT2
-        D3 --> RESULT3
+        D3["Cross-reference\nInternal Claim Logs"]
     end
 
-    RESULT1{{"❓ Was claim\nrejected by Clearinghouse?"}}
-    RESULT2{{"❓ Is patient\neligibility valid?"}}
-    RESULT3{{"❓ Was claim\never submitted?"}}
+    D1 --> R1{{"Clearinghouse\nRejected?"}}
+    D2 --> R2{{"Eligibility\nValid?"}}
+    D3 --> R3{{"Claim\nTransmitted?"}}
 
-    RESULT1 -->|"Yes: Demographic Error"| FIX1
-    RESULT1 -->|"No: Reached Payer"| FIX2
-    RESULT2 -->|"No: Wrong Plan"| FIX3
-    RESULT3 -->|"No: System Bug"| FIX4
-
-    subgraph FIX1 ["🛠️ Fix: Clearinghouse Rejections"]
-        F1A["Correct Member ID /\nDOB / NPI Typos"]
-        F1B["Bulk Resubmit\nElectronically"]
-        F1A --> F1B
-    end
-
-    subgraph FIX2 ["📞 Fix: Payer-Side Issues"]
-        F2A["Batch Call Payer\n(30 claims per call session)"]
-        F2B["Request Claim\nReceipt Confirmation"]
-        F2C["Escalate to\nPayer Relations if needed"]
-        F2A --> F2B --> F2C
-    end
-
-    subgraph FIX3 ["🔄 Fix: Eligibility Mismatch"]
-        F3A["Update patient\ninsurance on file"]
-        F3B["Resubmit to\ncorrect payer"]
-        F3A --> F3B
-    end
-
-    subgraph FIX4 ["⚠️ Fix: Internal System Gap"]
-        F4A["Flag claims that were\nnever transmitted"]
-        F4B["Root-cause the\nsystem integration bug"]
-        F4C["Submit claims\nfor first time"]
-        F4A --> F4B --> F4C
-    end
+    R1 -->|"Yes"| FIX1["Correct demographics\n→ Bulk resubmit"]
+    R1 -->|"No"| FIX2["Batch call payer\n→ Confirm receipt"]
+    R2 -->|"No"| FIX3["Update insurance\n→ Resubmit to correct payer"]
+    R3 -->|"No"| FIX4["Flag system bug\n→ Submit for first time"]
 
     FIX1 & FIX2 & FIX3 & FIX4 --> PREVENT
 
-    subgraph PREVENT ["🛡️ Step 3: Prevent Future Backlog"]
-        P1["Automated nightly\nEDI 277 monitoring"]
-        P2["Alert if rejection rate\nexceeds 2% threshold"]
-        P3["Weekly reconciliation\nreport to Ops Manager"]
+    subgraph PREVENT ["🛡️ Step 3: Prevent Recurrence"]
+        P1["Nightly EDI 277 monitoring"]
+        P2["Alert if rejection >2%"]
+        P3["Weekly recon report"]
     end
 
-    PREVENT --> GOAL(["✅ Target: <1% Claims\nin 'Not Found' Status"])
+    PREVENT --> GOAL(["✅ Target: <1% 'Not Found'"])
 
     style START fill:#450a0a,stroke:#ef4444,color:#fff
     style GOAL fill:#064e3b,stroke:#10b981,color:#fff
     style STEP1 fill:#1e293b,stroke:#6366f1,color:#fff
     style STEP2 fill:#1e293b,stroke:#f59e0b,color:#fff
-    style FIX1 fill:#1e293b,stroke:#a855f7,color:#fff
-    style FIX2 fill:#1e293b,stroke:#3b82f6,color:#fff
-    style FIX3 fill:#1e293b,stroke:#ec4899,color:#fff
-    style FIX4 fill:#1e293b,stroke:#ef4444,color:#fff
     style PREVENT fill:#1e293b,stroke:#10b981,color:#fff
 ```
 
-### My Initial Hypothesis
-"Not found" by the payer is a very specific failure mode. It almost never means the claim was lost inside the payer's system — it usually means **the claim never arrived at the payer** in a recognizable form, or arrived with incorrect identifiers.
+### 4.3 Prioritization Framework
 
-### My Thought Process
-10,000 claims × sequential phone calls = an enormous waste of time. I immediately knew the answer was to **automate the diagnosis** before touching the phone.
+| Priority Tier | Criteria | Rationale |
+|---|---|---|
+| **Tier 1: Timely Filing** | Claims within 30 days of payer deadline | Permanent denial after expiration — irreversible revenue loss |
+| **Tier 2: Dollar Value** | Sort descending by claim amount | Maximize revenue recovered per hour of operator time |
+| **Tier 3: Payer Batch** | Group by insurance company | Calling 30 Aetna claims in one session is 10x more efficient than random order |
 
-My bucketing priority:
-1. **Timely Filing Limits first** — some payers (e.g., Medicare: 12 months, some commercial: 90 days) will deny claims permanently after a deadline. These are top priority regardless of dollar value.
-2. **Dollar value second** — maximize revenue recovered per hour of operator time.
-3. **By payer batch third** — calling 30 Aetna claims in one block is 10x more efficient than random order.
+### 4.4 Diagnosis Before Phone Calls
 
-My diagnosis instinct: Check the **EDI 277 Clearinghouse Rejection Reports** before calling anyone. If the clearinghouse rejected the claim, the payer never saw it. These rejections are almost always demographic errors (wrong Member ID, DOB mismatch, provider NPI typo) that can be bulk-corrected and resubmitted electronically.
+The critical insight is: **"Claim Not Found" almost always means the claim never arrived at the payer.** Before placing a single phone call, I would execute automated electronic diagnostics:
+
+| Diagnostic Tool | What It Reveals |
+|---|---|
+| **EDI 277 Clearinghouse Reports** | Whether the claim was rejected at the clearinghouse level before reaching the payer (common cause: demographic typos — wrong Member ID, DOB mismatch, provider NPI error) |
+| **EDI 270/271 Eligibility Checks** | Whether the patient's insurance was valid at the date of service (common cause: patient switched plans, employer changed carriers) |
+| **Internal Submission Logs** | Whether the claim was ever actually transmitted by our system (common cause: integration bug silently dropped the claim) |
+
+### 4.5 Resolution Actions
+
+| Finding | Action | Method |
+|---|---|---|
+| Clearinghouse rejection (demographic error) | Correct Member ID / DOB / NPI → Bulk electronic resubmission | Automated batch |
+| Claim reached payer but "not found" | Batch phone call to payer, request receipt confirmation, escalate to payer relations | Manual, batched by payer |
+| Patient eligibility lapsed | Update insurance on file → Resubmit to correct payer | Semi-automated |
+| Claim never transmitted | Flag the system integration bug → Submit claim for the first time | Engineering escalation |
 
 ---
 
-## Problem 4: Revenue Debugging — Deep Medicare Knowledge
+## 5. Problem 4 — Debugging Revenue
 
-### 🌲 End-to-End Solution Workflow
+### 5.1 Problem Definition
+Three discrete billing discrepancies requiring deep understanding of Medicare payment methodology.
+
+### 5.2 Solution Architecture
 
 ```mermaid
 flowchart TD
-    START(["💵 Problem: Revenue Discrepancies\n3 Sub-Problems to Debug"])
+    START(["💵 3 Revenue Discrepancies"])
 
-    START --> PARTA
-    START --> PARTB
-    START --> PARTC
+    START --> PARTA & PARTB & PARTC
 
-    subgraph PARTA ["🌍 Part A: Geographic Payment Variation"]
-        A1["CPT 97110 pays $38.73\nin Locality 0210201"]
-        A2["CPT 97110 pays $27.55\nin Locality 0730200"]
-        A1 & A2 --> A3{{"❓ Why the\n$11.18 gap?"}}
-        A3 --> A4["Medicare GPCI Formula:\nPayment = (Work RVU × Work GPCI\n+ PE RVU × PE GPCI\n+ MP RVU × MP GPCI)\n× Conversion Factor"]
-        A4 --> A5["✅ Higher local cost of living\n= Higher GPCI multiplier\n= Higher payout"]
+    subgraph PARTA ["🌍 Part A: Geographic Variation"]
+        A1["97110: $38.73 in Locality 0210201"]
+        A2["97110: $27.55 in Locality 0730200"]
+        A1 & A2 --> A3["Medicare GPCI Formula:\n(Work RVU × Work GPCI\n+ PE RVU × PE GPCI\n+ MP RVU × MP GPCI)\n× Conversion Factor"]
+        A3 --> A4["✅ Higher cost of living\n= Higher GPCI = Higher payout"]
     end
 
-    subgraph PARTB ["📉 Part B: Same CPT, Different Payout"]
-        B1["Claim #1: 97110 + 97140\n+ G0283 + 97112\n→ 97140 paid $20"]
-        B2["Claim #2: 97140 only\n→ 97140 paid $40"]
-        B1 & B2 --> B3{{"❓ Why 50%\nreduction?"}}
-        B3 --> B4["CMS MPPR Rule:\nMultiple Procedure\nPayment Reduction"]
-        B4 --> B5["Primary procedure:\n100% PE RVU"]
-        B4 --> B6["Secondary procedures:\n50% PE RVU reduction"]
-        B5 & B6 --> B7["✅ 97140 is secondary\non Claim #1 → PE cut 50%\n→ $20 instead of $40"]
+    subgraph PARTB ["📉 Part B: MPPR Rule"]
+        B1["Claim #1: 4 codes\n→ 97140 paid $20"]
+        B2["Claim #2: 97140 only\n→ paid $40"]
+        B1 & B2 --> B3["CMS MPPR:\n50% PE RVU reduction\nfor secondary procedures"]
+        B3 --> B4["✅ 97140 is secondary\non Claim #1 → PE halved"]
     end
 
-    subgraph PARTC ["⏱️ Part C: 8-Minute Rule Optimization"]
-        C1["Therapist logged:\n97110: 38 min (2 units)\n97112: 24 min (1 unit)\nG0283: 45 min (3 units)"]
-        C1 --> C2["Total: 38 + 24 + 45\n= 107 timed minutes"]
-        C2 --> C3{{"❓ How many\nbillable units?"}}
-        C3 --> C4["8-Min Rule Table:\n98–112 min = 7 units"]
-        C4 --> C5["⚠️ Currently billing 6 units\n(2+1+3)"]
-        C5 --> C6["💰 OPTIMIZATION:\nBill 7 units total\nAllocate extra unit to\nhighest-RVU code (97112)"]
-        C6 --> C7["✅ Revenue increase\nper claim: +1 unit × RVU value"]
+    subgraph PARTC ["⏱️ Part C: 8-Minute Rule"]
+        C1["107 total timed minutes\nCurrently billing 6 units"]
+        C1 --> C2["8-Min Rule:\n98–112 min = 7 units"]
+        C2 --> C3["💰 Bill 7 units\nAllocate extra to highest RVU"]
     end
 
     style START fill:#1e293b,stroke:#3b82f6,color:#fff
     style PARTA fill:#1e293b,stroke:#6366f1,color:#fff
     style PARTB fill:#1e293b,stroke:#f59e0b,color:#fff
     style PARTC fill:#1e293b,stroke:#10b981,color:#fff
-    style A5 fill:#064e3b,stroke:#10b981,color:#fff
-    style B7 fill:#064e3b,stroke:#10b981,color:#fff
-    style C7 fill:#064e3b,stroke:#10b981,color:#fff
+    style A4 fill:#064e3b,stroke:#10b981,color:#fff
+    style B4 fill:#064e3b,stroke:#10b981,color:#fff
+    style C3 fill:#064e3b,stroke:#10b981,color:#fff
 ```
 
-### Part A: Geographic Variation (GPCI)
-My instinct: anytime you see Medicare paying dramatically different rates for the same CPT code in different locations, the answer is the **Geographic Practice Cost Index (GPCI)**. 
+### 5.3 Part A — Geographic Payment Variation (GPCI)
 
-Medicare uses a formula: `Payment = (Work RVU × Work GPCI + PE RVU × PE GPCI + MP RVU × MP GPCI) × Conversion Factor`
+**Observation:** CPT 97110 pays $38.73 in MAC Locality 0210201, but $27.55 in Locality 0730200 — an $11.18 gap for the identical service.
 
-The GPCI adjusts for local costs: physician work intensity, practice expenses (rent, staff), and malpractice premiums. A provider in San Francisco inherently has higher practice expenses than one in rural Missouri, so their PE GPCI is higher, resulting in a larger total payment.
+**Explanation:** Medicare determines physician payment using the **Resource-Based Relative Value Scale (RBRVS)** formula:
 
-### Part B: The MPPR Rule (Multiple Procedure Payment Reduction)
-My instinct: when I see a payer paying significantly less for the *same CPT code* depending on what else is on the claim, the answer is almost always **MPPR**.
+```
+Payment = [(Work RVU × Work GPCI) + (PE RVU × PE GPCI) + (MP RVU × MP GPCI)] × CF
+```
 
-CMS introduced MPPR specifically for therapy services (97XXX codes): when multiple timed therapy procedures are performed on the same date, Medicare pays 100% for the highest-value procedure, but applies a **50% reduction to the Practice Expense component** of all subsequent procedures.
-
-This is why 97140 paid ~$40 alone but only ~$20 alongside 97110, G0283, and 97112. The work RVU stays the same, but the PE RVU gets cut in half.
-
-### Part C: The 8-Minute Rule Optimization
-My instinct: whenever a claim has multiple timed CPT codes, I always check if the 8-Minute Rule is being applied correctly — this is the single most common billing optimization opportunity I encounter.
-
-The therapist logged 38 + 24 + 45 = **107 total timed minutes**.
-
-The 8-Minute Rule:
-- 8–22 min = 1 unit
-- 23–37 min = 2 units
-- 38–52 min = 3 units
-- 53–67 min = 4 units
-- 68–82 min = 5 units
-- 83–97 min = 6 units
-- **98–112 min = 7 units** ← we are here
-
-The therapist is billing 6 units (2+1+3). They are entitled to **7 units**. The remaining partial minutes from each code's remainder stack to unlock a 7th billable unit. To maximize revenue, allocate the extra unit to the code with the highest RVU value.
-
----
-
-## 🛠️ Why I Built the Dashboard
-
-After completing the analysis, I asked myself: *"If I handed this to an operations director as a CSV, what would happen?"*
-
-They would spend hours reformatting it in Excel. The insights would be buried. Decisions would be delayed.
-
-So I built an interactive React dashboard (Vite + Tailwind + Recharts) that gives any stakeholder — regardless of technical skill — **instant, visual access to the operational insights** derived from the SQL analysis.
-
-The dashboard was designed with one principle: **every chart must drive an action**. The Provider Performance tab doesn't just show match rates — it flags Liam Young in yellow so a manager knows exactly who to coach. The CPT Analysis tab doesn't just show volumes — it ranks codes worst-to-best so a billing team knows where to focus documentation training.
-
----
-
-## 📚 Key Lessons & Principles I Applied
-
-| Principle | Application |
+| Component | Description |
 |---|---|
-| **Scalability over speed** | Built a Python pipeline instead of doing it manually in Excel |
-| **Parallel diagnosis** | For Problem 1, simultaneously checked tooling and workflow rather than sequentially |
-| **Prioritize by impact** | For 10,000 missing claims, bucketed by Timely Filing first, not alphabetically |
-| **Data tells a story** | The declining match rate trend was more alarming than the static gap count |
-| **Automate the exception** | A nightly SQL cron job is worth more than 20 operators doing the same check manually |
-| **Know your domain** | GPCI, MPPR, and the 8-Minute Rule are non-negotiable knowledge for any RCM analyst |
-| **Visualize for action** | Every chart on the dashboard is tied to a specific operational decision |
+| **Work RVU** | Physician effort/skill required (same for all locations) |
+| **PE RVU** | Practice Expense — rent, equipment, staff salaries |
+| **MP RVU** | Malpractice insurance premiums |
+| **GPCI** | Geographic Practice Cost Index — locality-specific multiplier |
+| **CF** | Conversion Factor — national dollar amount per RVU ($33.89 for CY2024) |
+
+**Result:** Locality 0210201 has a higher PE GPCI (reflecting higher local rent, staff costs) than Locality 0730200, resulting in the $11.18 difference.
+
+**Reference:** [CMS Physician Fee Schedule Lookup Tool](https://www.cms.gov/medicare/payment/fee-schedules/physician)
+
+### 5.4 Part B — Multiple Procedure Payment Reduction (MPPR)
+
+**Observation:** CPT 97140 paid ~$40 when billed alone (Claim #2), but only ~$20 when billed alongside 97110, G0283, and 97112 on the same day (Claim #1).
+
+**Explanation:** CMS applies the **MPPR rule** to outpatient therapy services:
+
+| Procedure Position | Payment Rule |
+|---|---|
+| **Primary** (highest PE RVU) | 100% of Practice Expense RVU |
+| **All subsequent procedures** | **50% reduction** to Practice Expense RVU |
+
+On Claim #1, 97140 is not the primary procedure — 97110 or G0283 likely has a higher PE RVU. Therefore, 97140's Practice Expense component is reduced by 50%, while the Work RVU and MP RVU remain unchanged.
+
+**Result:** $40 (full PE) → $20 (PE cut by 50%) = exact observed behavior.
+
+**Reference:** [CMS MPPR Policy — CY2024 PFS Final Rule](https://www.cms.gov/medicare/payment/fee-schedules/physician)
+
+### 5.5 Part C — 8-Minute Rule Optimization
+
+**Observation:** A Physical Therapist logged the following:
+
+| Timed Minutes | CPT Code | Description | Units Billed |
+|---|---|---|---|
+| 38 | 97110 | Therapeutic Exercise | 2 |
+| 24 | 97112 | Neuromuscular Re-education | 1 |
+| 45 | G0283 | Electrical Stimulation | 3 |
+| **107 total** | | | **6 billed** |
+
+**Issue Identified:** The therapist is billing **6 units**, but the CMS 8-Minute Rule entitles them to **7 units**.
+
+**8-Minute Rule Reference Table:**
+
+| Total Timed Minutes | Billable Units |
+|---|---|
+| 8 – 22 | 1 |
+| 23 – 37 | 2 |
+| 38 – 52 | 3 |
+| 53 – 67 | 4 |
+| 68 – 82 | 5 |
+| 83 – 97 | 6 |
+| **98 – 112** | **7 ← We are here (107 min)** |
+
+**Optimization Strategy:** Allocate the 7th unit to the CPT code with the **highest RVU value** (97112 — Neuromuscular Re-education) to maximize total claim reimbursement.
+
+**Revenue Impact:** +1 billable unit per claim × the RVU value of 97112 × Conversion Factor = incremental revenue per patient visit.
+
+**Reference:** [CMS 8-Minute Rule — Medicare Benefit Policy Manual, Ch. 15, §230](https://www.cms.gov/regulations-and-guidance/guidance/manuals/downloads/bp102c15.pdf)
 
 ---
 
-## ✅ Final Summary
+## 6. Dashboard Design Rationale
 
-This case study was not just a data exercise — it was a realistic simulation of the types of problems a Data Operations Analyst faces at a healthcare technology company. My approach was:
+### 6.1 Design Philosophy
+After completing the SQL analysis, the critical question was: *"How do we ensure operations leaders act on these findings immediately?"*
 
-1. **Think programmatically** before touching manual tools.
-2. **Let the data guide the narrative** — I didn't start with a conclusion and find data to support it.
-3. **Tie every technical output to a business action** — the SQL query produces results; those results drive the operational plan; the operational plan drives measurable financial outcomes.
+Delivering results as a CSV or static spreadsheet would delay action. The solution was to build a **live, interactive React dashboard** (Vite + Tailwind CSS + Recharts) designed around one principle: **every chart must drive a specific operational decision.**
 
-The result: **$81,420 in recoverable Q3 revenue**, a clear compliance remediation path for the 202 undocumented lines, and a scalable automation framework that prevents this gap from recurring at the same scale in Q4 and beyond.
+### 6.2 Dashboard Tab Architecture
+
+| Tab | Purpose | Key Action It Drives |
+|---|---|---|
+| **Executive Overview** | Macro KPIs: Match Rate, Volume, Trends | Identifies overall system health and trend direction |
+| **Provider Performance** | Match rate + DB-Only lines per provider | Flags Liam Young (89.9%) for targeted coaching |
+| **CPT Code Analysis** | DB vs. EHR volume + match % per CPT | Identifies 97035 (Ultrasound) as most under-documented service |
+| **Gap & Operations** | Prioritized action checklist | Assigns specific remediation tasks to MV and India teams |
+| **RCM Sandbox** | Generic revenue cycle KPIs | Demonstrates broader RCM dashboard capabilities |
+
+---
+
+## 7. Key Principles Applied
+
+| # | Principle | Application in This Project |
+|---|---|---|
+| 1 | **Scalability over speed** | Built a Python pipeline instead of manual Excel — reproducible at quarter-end |
+| 2 | **Parallel diagnosis** | Problem 1: Simultaneously checked tooling, workflow, and data — not sequentially |
+| 3 | **Prioritize by impact** | Problem 3: Bucketed 10,000 claims by Timely Filing deadline, not alphabetically |
+| 4 | **Data tells a story** | The declining match rate trend (95.8% → 93.1%) was more alarming than the static gap count |
+| 5 | **Automate the exception** | A nightly SQL cron job is worth more than 20 operators doing the same check manually |
+| 6 | **Know your domain** | GPCI, MPPR, and the 8-Minute Rule are non-negotiable knowledge for any RCM analyst |
+| 7 | **Visualize for action** | Every chart on the dashboard is tied to a specific operational decision |
+
+---
+
+## 8. Final Conclusion & Business Outcomes
+
+This case study was a realistic simulation of the operational challenges faced by a Data Operations Analyst at a healthcare technology company. The solutions presented in this report demonstrate competency across three critical dimensions:
+
+| Dimension | Evidence |
+|---|---|
+| **Technical Engineering** | Custom Python ETL pipeline, SQL anti-join architecture, React dashboard development |
+| **Domain Expertise** | Medicare GPCI formula, CMS MPPR rule, 8-Minute Rule optimization |
+| **Operational Strategy** | Resource allocation across offshore/onshore teams, phased remediation timelines, automated monitoring |
+
+### Quantified Business Impact
+
+| Outcome | Value |
+|---|---|
+| **Q3 Revenue Recovery** | $81,420 (1,357 missed EHR lines × $60 avg. payout) |
+| **Compliance Risk Mitigated** | 202 undocumented billing lines audited and resolved |
+| **Process Improvement** | Automated nightly reconciliation replaces quarterly manual review |
+| **Long-Term Target** | ≥99% match rate via Augmedix Ambient AI deployment |
+
+---
+
+*End of Report*
