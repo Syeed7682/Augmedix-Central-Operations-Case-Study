@@ -14,6 +14,68 @@ Four problems. Limited resources. Real compliance stakes. Here is exactly how I 
 
 ## Problem 1: Workers Compensation Claims — The 90% Failure Rate
 
+### 🌲 End-to-End Solution Workflow
+
+```mermaid
+flowchart TD
+    START(["🚨 Problem: 90% Failure Rate\n50 completed / 500 expected daily"])
+
+    START --> DIAGNOSE
+
+    subgraph DIAGNOSE ["🔍 Step 1: Parallel Root-Cause Diagnosis"]
+        D1["📋 Review API & Server\nError Logs"]
+        D2["👁️ Virtual Gemba Walk\nShadow 3 Operators"]
+        D3["🔬 A/B Compare\n10% Success vs 90% Failure"]
+    end
+
+    D1 --> Q1{{"❓ Error Type?"}}
+    D2 --> Q2{{"❓ Workflow Gap?"}}
+    D3 --> Q3{{"❓ Data Variable\nDifference?"}}
+
+    Q1 -->|"Timeout / 500 Error"| FIX_TOOL
+    Q1 -->|"Validation Error"| FIX_VAL
+    Q2 -->|"UI Bottleneck"| FIX_WORKFLOW
+    Q2 -->|"Missing Steps"| FIX_SOP
+    Q3 -->|"Size / Insurer"| FIX_TOOL
+
+    subgraph FIX_TOOL ["⚙️ Fix: Tooling Issues"]
+        T1["Move PDF generation\nto Async Background Queue"]
+        T2["Add pre-submit validation\n(warn before hard fail)"]
+        T3["Compress PDF payload\n(reduce size limits)"]
+    end
+
+    subgraph FIX_VAL ["🛡️ Fix: Validation"]
+        V1["Auto-flag\nmissing required fields"]
+        V2["Block submission\nuntil complete"]
+    end
+
+    subgraph FIX_WORKFLOW ["📋 Fix: Workflow Issues"]
+        FIX_SOP["📄 Author step-by-step SOP\nwith screenshots"]
+        W1["Implement Bulk-Batch\nClaim Selection UI"]
+        W2["Deploy MV QA operators\nfor 2-week oversight"]
+    end
+
+    T1 & T2 & T3 --> MONITOR
+    V1 & V2 --> MONITOR
+    W1 & W2 --> MONITOR
+
+    subgraph MONITOR ["📊 Step 3: Ongoing KPI Tracking"]
+        M1["Daily Dashboard:\nSuccess Rate per Operator"]
+        M2["Daily Dashboard:\nAvg Time-to-Submission"]
+        M3["Alert if rate drops below 90%"]
+    end
+
+    MONITOR --> GOAL(["✅ Target: 490+/500 Claims\nCompleted Daily"])
+
+    style START fill:#450a0a,stroke:#ef4444,color:#fff
+    style GOAL fill:#064e3b,stroke:#10b981,color:#fff
+    style DIAGNOSE fill:#1e293b,stroke:#6366f1,color:#fff
+    style FIX_TOOL fill:#1e293b,stroke:#a855f7,color:#fff
+    style FIX_WORKFLOW fill:#1e293b,stroke:#f59e0b,color:#fff
+    style FIX_VAL fill:#1e293b,stroke:#3b82f6,color:#fff
+    style MONITOR fill:#1e293b,stroke:#10b981,color:#fff
+```
+
 ### My Initial Hypothesis
 A 90% failure rate is not a training problem — it is a system problem. When I see a failure rate that catastrophically high, the first thing I do is rule out the obvious: is this a bug, a bad configuration, or a process breakdown?
 
@@ -36,6 +98,71 @@ This parallel approach compresses the diagnosis from days to hours.
 ---
 
 ## Problem 2: Closed Encounters Analysis — The Data Reconciliation
+
+### 🌲 End-to-End Solution Workflow
+
+```mermaid
+flowchart TD
+    START(["📂 Input: EHR CSV + DB CSV\nQ3 2024 Physical Therapy Data"])
+
+    START --> P1
+
+    subgraph P1 ["🐍 Phase 1: Python ETL Pipeline"]
+        E1["Load CSVs with pandas"]
+        E2["Normalize date formats\n& column headers"]
+        E3["Detect PostgreSQL arrays\nin CPT column"]
+        E4["Explode arrays →\n1 CPT code per row"]
+        E5[("Load into SQLite\naugmedix.db")]
+        E1 --> E2 --> E3 --> E4 --> E5
+    end
+
+    E5 --> P2
+
+    subgraph P2 ["🔍 Phase 2: SQL Reconciliation Engine"]
+        S1["LEFT JOIN db_cpt → ehr_records\non Patient + Provider + Date + CPT"]
+        S2["CASE WHEN match\n→ Tag as Matched or DB_Only"]
+        S3["WHERE NOT EXISTS anti-join\n→ Tag as EHR_Only"]
+        S4["UNION ALL\n→ Master result table"]
+        S1 --> S2
+        S3 --> S4
+        S2 --> S4
+    end
+
+    S4 --> P3
+
+    subgraph P3 ["📊 Phase 3: Analytical Queries (8 SQL Scripts)"]
+        Q1["Q1: Data Profile &\nVolume Check"]
+        Q2["Q2: Reconciliation\nSummary"]
+        Q3["Q3: Provider Accuracy\nRanking"]
+        Q4["Q4: CPT Code\nDiscrepancy"]
+        Q5["Q5: Monthly Match\nRate Trend"]
+        Q6["Q6: Patient\nGap List"]
+        Q7["Q7: Provider\nSwitching"]
+        Q8["Q8: Duplicate\nCPT Detection"]
+    end
+
+    P3 --> P4
+
+    subgraph P4 ["📈 Phase 4: Findings"]
+        F1{{"✅ Matched\n25,157 lines (94.16%)"}}
+        F2{{"🔴 DB-Only\n202 lines — Compliance Risk"}}
+        F3{{"🟡 EHR-Only\n1,357 lines — $81,420 Revenue"}}
+        F4{{"⚠️ Duplicates\n15 Sessions"}}
+        F5{{"📉 Trend\n95.8% → 93.1% Declining"}}
+    end
+
+    P4 --> DASHBOARD(["🖥️ React Dashboard\nKPI Cards + 4 Tab Views"])
+
+    style START fill:#1e293b,stroke:#3b82f6,color:#fff
+    style P1 fill:#1e293b,stroke:#a855f7,color:#fff
+    style P2 fill:#1e293b,stroke:#f59e0b,color:#fff
+    style P3 fill:#1e293b,stroke:#6366f1,color:#fff
+    style P4 fill:#1e293b,stroke:#ef4444,color:#fff
+    style F1 fill:#064e3b,stroke:#10b981,color:#fff
+    style F2 fill:#450a0a,stroke:#ef4444,color:#fff
+    style F3 fill:#451a03,stroke:#f59e0b,color:#fff
+    style DASHBOARD fill:#064e3b,stroke:#10b981,color:#fff
+```
 
 ### My Initial Hypothesis
 When two datasets representing the same universe of events don't match, the root cause is almost always one of three things:
@@ -87,6 +214,88 @@ The trend is what concerned me most. A static gap is a manageable backlog. A *wi
 
 ## Problem 3: 10,000 Claims Not Found — The Bucketing Strategy
 
+### 🌲 End-to-End Solution Workflow
+
+```mermaid
+flowchart TD
+    START(["🚨 Problem: 10,000 Claims x 150 Payers\nAll returning 'Claim Not Found'"])
+
+    START --> STEP1
+
+    subgraph STEP1 ["🪣 Step 1: Bucket & Prioritize"]
+        B1["⏰ Tier 1: Timely Filing Limit\nClaims expiring within 30 days"]
+        B2["💰 Tier 2: Highest Dollar Value\nMaximize revenue recovered per hour"]
+        B3["🏢 Tier 3: Batch by Payer\n(e.g., all 200 Aetna claims together)"]
+        B1 --> B2 --> B3
+    end
+
+    B3 --> STEP2
+
+    subgraph STEP2 ["🔍 Step 2: Automated Diagnosis (Before Any Phone Calls)"]
+        D1["Pull EDI 277\nClearinghouse Rejection Reports"]
+        D2["Run Bulk EDI 270/271\nEligibility Verification"]
+        D3["Cross-reference\nInternal Claim Status Logs"]
+        D1 --> RESULT1
+        D2 --> RESULT2
+        D3 --> RESULT3
+    end
+
+    RESULT1{{"❓ Was claim\nrejected by Clearinghouse?"}}
+    RESULT2{{"❓ Is patient\neligibility valid?"}}
+    RESULT3{{"❓ Was claim\never submitted?"}}
+
+    RESULT1 -->|"Yes: Demographic Error"| FIX1
+    RESULT1 -->|"No: Reached Payer"| FIX2
+    RESULT2 -->|"No: Wrong Plan"| FIX3
+    RESULT3 -->|"No: System Bug"| FIX4
+
+    subgraph FIX1 ["🛠️ Fix: Clearinghouse Rejections"]
+        F1A["Correct Member ID /\nDOB / NPI Typos"]
+        F1B["Bulk Resubmit\nElectronically"]
+        F1A --> F1B
+    end
+
+    subgraph FIX2 ["📞 Fix: Payer-Side Issues"]
+        F2A["Batch Call Payer\n(30 claims per call session)"]
+        F2B["Request Claim\nReceipt Confirmation"]
+        F2C["Escalate to\nPayer Relations if needed"]
+        F2A --> F2B --> F2C
+    end
+
+    subgraph FIX3 ["🔄 Fix: Eligibility Mismatch"]
+        F3A["Update patient\ninsurance on file"]
+        F3B["Resubmit to\ncorrect payer"]
+        F3A --> F3B
+    end
+
+    subgraph FIX4 ["⚠️ Fix: Internal System Gap"]
+        F4A["Flag claims that were\nnever transmitted"]
+        F4B["Root-cause the\nsystem integration bug"]
+        F4C["Submit claims\nfor first time"]
+        F4A --> F4B --> F4C
+    end
+
+    FIX1 & FIX2 & FIX3 & FIX4 --> PREVENT
+
+    subgraph PREVENT ["🛡️ Step 3: Prevent Future Backlog"]
+        P1["Automated nightly\nEDI 277 monitoring"]
+        P2["Alert if rejection rate\nexceeds 2% threshold"]
+        P3["Weekly reconciliation\nreport to Ops Manager"]
+    end
+
+    PREVENT --> GOAL(["✅ Target: <1% Claims\nin 'Not Found' Status"])
+
+    style START fill:#450a0a,stroke:#ef4444,color:#fff
+    style GOAL fill:#064e3b,stroke:#10b981,color:#fff
+    style STEP1 fill:#1e293b,stroke:#6366f1,color:#fff
+    style STEP2 fill:#1e293b,stroke:#f59e0b,color:#fff
+    style FIX1 fill:#1e293b,stroke:#a855f7,color:#fff
+    style FIX2 fill:#1e293b,stroke:#3b82f6,color:#fff
+    style FIX3 fill:#1e293b,stroke:#ec4899,color:#fff
+    style FIX4 fill:#1e293b,stroke:#ef4444,color:#fff
+    style PREVENT fill:#1e293b,stroke:#10b981,color:#fff
+```
+
 ### My Initial Hypothesis
 "Not found" by the payer is a very specific failure mode. It almost never means the claim was lost inside the payer's system — it usually means **the claim never arrived at the payer** in a recognizable form, or arrived with incorrect identifiers.
 
@@ -103,6 +312,53 @@ My diagnosis instinct: Check the **EDI 277 Clearinghouse Rejection Reports** bef
 ---
 
 ## Problem 4: Revenue Debugging — Deep Medicare Knowledge
+
+### 🌲 End-to-End Solution Workflow
+
+```mermaid
+flowchart TD
+    START(["💵 Problem: Revenue Discrepancies\n3 Sub-Problems to Debug"])
+
+    START --> PARTA
+    START --> PARTB
+    START --> PARTC
+
+    subgraph PARTA ["🌍 Part A: Geographic Payment Variation"]
+        A1["CPT 97110 pays $38.73\nin Locality 0210201"]
+        A2["CPT 97110 pays $27.55\nin Locality 0730200"]
+        A1 & A2 --> A3{{"❓ Why the\n$11.18 gap?"}}
+        A3 --> A4["Medicare GPCI Formula:\nPayment = (Work RVU × Work GPCI\n+ PE RVU × PE GPCI\n+ MP RVU × MP GPCI)\n× Conversion Factor"]
+        A4 --> A5["✅ Higher local cost of living\n= Higher GPCI multiplier\n= Higher payout"]
+    end
+
+    subgraph PARTB ["📉 Part B: Same CPT, Different Payout"]
+        B1["Claim #1: 97110 + 97140\n+ G0283 + 97112\n→ 97140 paid $20"]
+        B2["Claim #2: 97140 only\n→ 97140 paid $40"]
+        B1 & B2 --> B3{{"❓ Why 50%\nreduction?"}}
+        B3 --> B4["CMS MPPR Rule:\nMultiple Procedure\nPayment Reduction"]
+        B4 --> B5["Primary procedure:\n100% PE RVU"]
+        B4 --> B6["Secondary procedures:\n50% PE RVU reduction"]
+        B5 & B6 --> B7["✅ 97140 is secondary\non Claim #1 → PE cut 50%\n→ $20 instead of $40"]
+    end
+
+    subgraph PARTC ["⏱️ Part C: 8-Minute Rule Optimization"]
+        C1["Therapist logged:\n97110: 38 min (2 units)\n97112: 24 min (1 unit)\nG0283: 45 min (3 units)"]
+        C1 --> C2["Total: 38 + 24 + 45\n= 107 timed minutes"]
+        C2 --> C3{{"❓ How many\nbillable units?"}}
+        C3 --> C4["8-Min Rule Table:\n98–112 min = 7 units"]
+        C4 --> C5["⚠️ Currently billing 6 units\n(2+1+3)"]
+        C5 --> C6["💰 OPTIMIZATION:\nBill 7 units total\nAllocate extra unit to\nhighest-RVU code (97112)"]
+        C6 --> C7["✅ Revenue increase\nper claim: +1 unit × RVU value"]
+    end
+
+    style START fill:#1e293b,stroke:#3b82f6,color:#fff
+    style PARTA fill:#1e293b,stroke:#6366f1,color:#fff
+    style PARTB fill:#1e293b,stroke:#f59e0b,color:#fff
+    style PARTC fill:#1e293b,stroke:#10b981,color:#fff
+    style A5 fill:#064e3b,stroke:#10b981,color:#fff
+    style B7 fill:#064e3b,stroke:#10b981,color:#fff
+    style C7 fill:#064e3b,stroke:#10b981,color:#fff
+```
 
 ### Part A: Geographic Variation (GPCI)
 My instinct: anytime you see Medicare paying dramatically different rates for the same CPT code in different locations, the answer is the **Geographic Practice Cost Index (GPCI)**. 
